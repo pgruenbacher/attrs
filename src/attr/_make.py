@@ -43,7 +43,7 @@ Sentinel to indicate the lack of a value when ``None`` is ambiguous.
 
 
 def attr(default=NOTHING, validator=None,
-         repr=True, cmp=True, hash=True, init=True,
+         repr=True, cmp=True, hash=True, init=True, meta=None,
          convert=None):
     """
     Create a new attribute on a class.
@@ -101,6 +101,7 @@ def attr(default=NOTHING, validator=None,
         cmp=cmp,
         hash=hash,
         init=init,
+        meta=meta,
         convert=convert,
     )
 
@@ -400,7 +401,7 @@ def _add_init(cls, frozen):
     # We cache the generated init methods for the same kinds of attributes.
     sha1 = hashlib.sha1()
     sha1.update(repr(attrs).encode("utf-8"))
-    unique_filename = "<attrs generated init {0}>".format(
+    unique_filename = "<attrs generateated init {0}>".format(
         sha1.hexdigest()
     )
 
@@ -594,12 +595,12 @@ class Attribute(object):
 
     Plus *all* arguments of :func:`attr.ib`.
     """
-    __slots__ = ('name', 'default', 'validator', 'repr', 'cmp', 'hash', 'init',
+    __slots__ = ('name', 'default', 'validator', 'repr', 'cmp', 'hash', 'init', 'meta',
                  'convert')
 
     _optional = {"convert": None}
 
-    def __init__(self, name, default, validator, repr, cmp, hash, init,
+    def __init__(self, name, default, validator, repr, cmp, hash, init, meta=None,
                  convert=None):
         # Cache this descriptor here to speed things up later.
         __bound_setattr = _obj_setattr.__get__(self, Attribute)
@@ -611,6 +612,7 @@ class Attribute(object):
         __bound_setattr('cmp', cmp)
         __bound_setattr('hash', hash)
         __bound_setattr('init', init)
+        __bound_setattr('meta', meta)
         __bound_setattr('convert', convert)
 
     def __setattr__(self, name, value):
@@ -626,7 +628,7 @@ class Attribute(object):
 
 
 _a = [Attribute(name=name, default=NOTHING, validator=None,
-                repr=True, cmp=True, hash=True, init=True)
+                repr=True, cmp=True, hash=True, init=True, meta=None)
       for name in Attribute.__slots__]
 Attribute = _add_hash(
     _add_cmp(_add_repr(Attribute, attrs=_a), attrs=_a), attrs=_a
@@ -640,13 +642,13 @@ class _CountingAttr(object):
     """
     __attrs_attrs__ = [
         Attribute(name=name, default=NOTHING, validator=None,
-                  repr=True, cmp=True, hash=True, init=True)
+                  repr=True, cmp=True, hash=True, init=True, meta=None)
         for name
-        in ("counter", "default", "repr", "cmp", "hash", "init",)
+        in ("counter", "default", "repr", "cmp", "hash", "init", "meta",)
     ]
     counter = 0
 
-    def __init__(self, default, validator, repr, cmp, hash, init, convert):
+    def __init__(self, default, validator, repr, cmp, hash, init, meta, convert):
         _CountingAttr.counter += 1
         self.counter = _CountingAttr.counter
         self.default = default
@@ -655,6 +657,7 @@ class _CountingAttr(object):
         self.cmp = cmp
         self.hash = hash
         self.init = init
+        self.meta = meta
         self.convert = convert
 
 
